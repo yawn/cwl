@@ -16,18 +16,14 @@ var tailCmd = &cobra.Command{
 
 	Use:   "tail",
 	Short: "Tail a log group",
+	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		clients := cwl.NewClients()
-
-		if len(args) != 1 {
-			return errors.New("missing log group")
-		}
 
 		parts := strings.Split(args[0], "@")
 
 		if len(parts) != 2 {
-			return errors.New("malformed log group")
+			return fmt.Errorf("malformed log group %q", args[0])
 		}
 
 		var (
