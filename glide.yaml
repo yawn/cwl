@@ -1,0 +1,10 @@
+package: github.com/yawn/cwl
+import:
+- package: github.com/aws/aws-sdk-go
+  version: ^1.10.41
+  subpackages:
+  - aws
+  - aws/endpoints
+  - aws/session
+  - service/cloudwatchlogs
+- package: github.com/spf13/cobra
