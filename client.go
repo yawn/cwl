@@ -2,7 +2,6 @@ package cwl
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -17,14 +16,14 @@ type Client struct {
 	StartTime *int64
 }
 
-func (c *Client) FindEvents(group string) error {
+func (c *Client) FindEvents(callback func(*Event), group string) error {
 
 	for {
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		more, err := c.findEvents(ctx, group)
+		more, err := c.findEvents(ctx, callback, group)
 
 		if err != nil {
 			return err
@@ -38,7 +37,7 @@ func (c *Client) FindEvents(group string) error {
 
 }
 
-func (c *Client) findEvents(ctx context.Context, group string) (bool, error) {
+func (c *Client) findEvents(ctx context.Context, callback func(*Event), group string) (bool, error) {
 
 	var lastTimestamp int64
 
@@ -62,13 +61,13 @@ func (c *Client) findEvents(ctx context.Context, group string) (bool, error) {
 
 	for _, event := range res.Events {
 
-		fmt.Printf("%v\t%s\t%s\t%s\t%s\n",
-			time.Unix((*event.Timestamp)/1000, 0).Format(time.RFC3339),
-			c.Region,
-			group,
-			*event.LogStreamName,
-			strings.TrimRight(*event.Message, "\n"),
-		)
+		callback(&Event{
+			Group:     group,
+			Message:   strings.TrimRight(*event.Message, "\n"),
+			Region:    c.Region,
+			Stream:    *event.LogStreamName,
+			Timestamp: time.Unix((*event.Timestamp)/1000, 0).Format(time.RFC3339),
+		})
 
 		if timestamp := *event.Timestamp; timestamp > lastTimestamp {
 			timestamp++

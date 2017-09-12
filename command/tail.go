@@ -1,7 +1,6 @@
 package command
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -10,6 +9,7 @@ import (
 )
 
 var tailFlags = struct {
+	json bool
 }{}
 
 var tailCmd = &cobra.Command{
@@ -19,6 +19,10 @@ var tailCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 
+		var (
+			clients  = cwl.NewClients()
+			callback = cwl.CallbackTabs
+		)
 
 		parts := strings.Split(args[0], "@")
 
@@ -37,13 +41,18 @@ var tailCmd = &cobra.Command{
 			return fmt.Errorf("no client for region %q", region)
 		}
 
-		return client.FindEvents(group)
+		if tailFlags.json {
+			callback = cwl.CallbackJSON
+		}
+
+		return client.FindEvents(callback, group)
 
 	},
 }
 
 func init() {
 
-	rootCmd.AddCommand(tailCmd)
+	tailCmd.Flags().BoolVarP(&tailFlags.json, "json", "j", false, "Output logs as JSON")
 
+	rootCmd.AddCommand(tailCmd)
 }
